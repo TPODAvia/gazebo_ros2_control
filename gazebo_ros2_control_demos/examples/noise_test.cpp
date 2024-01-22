@@ -20,7 +20,6 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 
 #include "control_msgs/action/follow_joint_trajectory.hpp"
-// #include "matplotlibcpp.h"
 
 std::shared_ptr<rclcpp::Node> node;
 bool common_goal_accepted = false;
