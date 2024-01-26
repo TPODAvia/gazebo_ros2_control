@@ -16,15 +16,22 @@ ROS 2 Distro | Branch | Build status | Documentation
 **Humble** | [`humble`](https://github.com/ros-controls/gazebo_ros2_control/tree/humble) | [![Gazebo ros2 control CI](https://github.com/ros-controls/gazebo_ros2_control/actions/workflows/ci.yaml/badge.svg?branch=humble)](https://github.com/ros-controls/gazebo_ros2_control/actions/workflows/ci.yaml) | [Documentation](https://control.ros.org/humble/index.html) <br /> [API Reference](https://control.ros.org/humble/doc/api/index.html)
 
 
-ros2 launch gazebo_ros2_control_demos cart_example_position.launch.py
-ros2 run gazebo_ros2_control_demos example_position
 
-ros2 launch gazebo_ros2_control_demos cart_example_velocity.launch.py
-ros2 run gazebo_ros2_control_demos example_velocity
+## Code examples
 
+These commands are used to launch and run different nodes and packages in a ROS2 environment. Here's a breakdown of what each command does:
 
-ros2 run plot_pkg plot.py
-
-
-Add error to the system
-the test it
+1. `ros2 launch gazebo_ros2_control_demos cart_example_position.launch.py`
+   This file contains instructions to start certain nodes and services in the `gazebo_ros2_control_demos` package.
+   
+2. `ros2 run gazebo_ros2_control_demos example_position`
+   The `example_position` node is responsible for controlling the position of a simulated object in the Gazebo environment.
+   
+3. `ros2 launch gazebo_ros2_control_demos cart_example_velocity.launch.py`
+   This file contains instructions to start nodes and services that control the velocity of the simulated object.
+   
+4. `ros2 run gazebo_ros2_control_demos example_velocity`
+   The `example_velocity` node controls the velocity of the simulated object in the Gazebo environment.
+   
+5. `ros2 run plot_pkg plot.py`
+   This script generates plots based on the data produced by the nodes in the `gazebo_ros2_control_demos` package.

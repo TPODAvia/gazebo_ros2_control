@@ -18,6 +18,8 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <random>
+#include <algorithm>
 
 #include "gazebo_ros2_control/gazebo_system.hpp"
 #include "gazebo/sensors/ImuSensor.hh"
@@ -103,6 +105,15 @@ public:
 
   /// \brief mapping of mimicked joints to index of joint they mimic
   std::vector<MimicJoint> mimic_joints_;
+
+  void round_position(double& position, int decimal_places)
+  {
+    double factor = pow(10, decimal_places);
+    position = round(position * factor) / factor;
+  }
+
+  const double BACKLASH_AMOUNT = 2; // adjust the backlash value as needed
+
 };
 
 namespace gazebo_ros2_control
@@ -520,6 +531,9 @@ GazeboSystem::perform_command_mode_switch(
   return hardware_interface::return_type::OK;
 }
 
+std::default_random_engine generator;
+std::uniform_real_distribution<double> distribution(-0.1, 0.1); // Adjust range as needed
+
 hardware_interface::return_type GazeboSystem::read(
   const rclcpp::Time & time,
   const rclcpp::Duration & period)
@@ -527,8 +541,26 @@ hardware_interface::return_type GazeboSystem::read(
   for (unsigned int j = 0; j < this->dataPtr->joint_names_.size(); j++) {
     if (this->dataPtr->sim_joints_[j]) {
       this->dataPtr->joint_position_[j] = this->dataPtr->sim_joints_[j]->Position(0);
+
+      // This is encoder resolution block
+      if (true) 
+      { 
+        this->dataPtr->round_position(this->dataPtr->joint_position_[j], 2); // Round to 2 decimal places
+      }
       this->dataPtr->joint_velocity_[j] = this->dataPtr->sim_joints_[j]->GetVelocity(0);
       this->dataPtr->joint_effort_[j] = this->dataPtr->sim_joints_[j]->GetForce(0u);
+    }
+  }
+
+  // This is noise feedback block
+  if (true) 
+  { 
+    for (unsigned int j = 0; j < this->dataPtr->joint_names_.size(); j++) {
+      if (this->dataPtr->sim_joints_[j]) {
+        // this->dataPtr->joint_position_[j] += distribution(generator); // Add noise to position
+        this->dataPtr->joint_velocity_[j] += distribution(generator); // Add noise to velocity
+        this->dataPtr->joint_effort_[j] += distribution(generator);   // Add noise to effort
+      }
     }
   }
 
@@ -595,7 +627,26 @@ hardware_interface::return_type GazeboSystem::write(
   for (unsigned int j = 0; j < this->dataPtr->joint_names_.size(); j++) {
     if (this->dataPtr->sim_joints_[j]) {
       if (this->dataPtr->joint_control_methods_[j] & POSITION) {
-        this->dataPtr->sim_joints_[j]->SetPosition(0, this->dataPtr->joint_position_cmd_[j], true);
+        
+        // This block adds the backlash of the system. Somehow it doesn't work.
+        if (false) {
+          double desired_position = this->dataPtr->joint_position_cmd_[j];
+          double actual_position = this->dataPtr->sim_joints_[j]->Position(0);
+          double position_diff = abs(desired_position - actual_position);
+          if (position_diff < 0.01) {
+            if (desired_position > actual_position) {
+              this->dataPtr->sim_joints_[j]->SetPosition(0, actual_position + 0.01, true);
+            } else {
+              this->dataPtr->sim_joints_[j]->SetPosition(0, actual_position - 0.01, true);
+            }
+          } else {
+            this->dataPtr->sim_joints_[j]->SetPosition(0, desired_position, true);
+          }
+        }
+        else
+        {
+          this->dataPtr->sim_joints_[j]->SetPosition(0, this->dataPtr->joint_position_cmd_[j], true);
+        }
         this->dataPtr->sim_joints_[j]->SetVelocity(0, 0.0);
       } else if (this->dataPtr->joint_control_methods_[j] & VELOCITY) { // NOLINT
         this->dataPtr->sim_joints_[j]->SetVelocity(0, this->dataPtr->joint_velocity_cmd_[j]);

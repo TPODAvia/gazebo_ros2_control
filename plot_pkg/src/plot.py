@@ -26,12 +26,15 @@ class DataSubscriber(Node):
 
 
     def listener_callback1(self, msg):
-        # print(f"Received data: {msg.data}")
+        # print(f"Received data: {len(msg.position)}")
         # position = msg.position
         # velocity = msg.velocity
+        if len(msg.position) > 1:
+            self.plot_data(msg.position[2] , self.line1) # use the middle joint instead of the first
+        else:
+            self.plot_data(msg.position[0] , self.line1)
 
-        self.plot_data(msg.position , self.line1) # Update the plot with new data
-        self.plot_data(self.second_data, self.line2) # Update the plot with new data
+        self.plot_data(self.second_data, self.line2)
 
         # Rescale x-axis if needed
         if plt.xlim()[1] - self.line1.get_xdata()[-1] < 1:
